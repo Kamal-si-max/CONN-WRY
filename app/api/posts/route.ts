@@ -8,10 +8,11 @@ import { posts, polls, pollOptions, pollVotes, postLikes, user } from "@/lib/db/
 
 // GET all posts
 export async function GET(req: Request) {
+  
   const session = await auth.api.getSession({ headers: await headers() })
   const url = new URL(req.url)
   const limit = Number(url.searchParams.get("limit") ?? "20")
-
+  
   const rows = await db
     .select({
       postId: posts.id,
@@ -31,7 +32,7 @@ export async function GET(req: Request) {
     .leftJoin(pollOptions, eq(pollOptions.pollId, polls.id))
     .orderBy(desc(posts.createdAt))
     .limit(limit)
-
+    
   const allPosts = Array.from(
     rows.reduce((acc, row) => {
       let post = acc.get(row.postId)
@@ -64,7 +65,7 @@ export async function GET(req: Request) {
       return acc
     }, new Map()).values()
   )
-
+  
   const counts = await db
     .select({
       postId: postLikes.postId,
@@ -73,7 +74,7 @@ export async function GET(req: Request) {
     })
     .from(postLikes)
     .groupBy(postLikes.postId, postLikes.reaction)
-
+    
   const reactionMap = counts.reduce((acc, row) => {
     const current = acc.get(row.postId) ?? { likes: 0, dislikes: 0 }
     if (row.reaction === "like") {
@@ -84,18 +85,20 @@ export async function GET(req: Request) {
     acc.set(row.postId, current)
     return acc
   }, new Map<number, { likes: number; dislikes: number }>())
-
+  
   const userReactionRows = session?.user?.id
     ? await db
         .select({ postId: postLikes.postId, reaction: postLikes.reaction })
         .from(postLikes)
         .where(eq(postLikes.userId, session.user.id))
     : []
+  
 
   const userReactionMap = userReactionRows.reduce((acc, row) => {
     acc.set(row.postId, row.reaction as "like" | "dislike")
     return acc
   }, new Map<number, "like" | "dislike">())
+  
 
   const userPollVoteRows = session?.user?.id
     ? await db
@@ -103,17 +106,18 @@ export async function GET(req: Request) {
         .from(pollVotes)
         .where(eq(pollVotes.userId, session.user.id))
     : []
+  
 
   const userPollVoteMap = userPollVoteRows.reduce((acc, row) => {
     acc.set(row.pollId, row.optionId)
     return acc
   }, new Map<number, number>())
-
+  
   const optionVoteCounts = await db
     .select({ optionId: pollVotes.optionId, total: sql<number>`count(*)` })
     .from(pollVotes)
     .groupBy(pollVotes.optionId)
-
+    
   const optionVoteMap = optionVoteCounts.reduce((acc, row) => {
     acc.set(row.optionId, Number(row.total))
     return acc
@@ -179,7 +183,7 @@ export async function POST(req: Request) {
       content,
     })
     .returning()
-
+  
   if (poll) {
     const question = String(poll.question ?? "").trim()
     const options = Array.isArray(poll.options)
@@ -204,6 +208,6 @@ export async function POST(req: Request) {
       )
     }
   }
-
+  console.time("GET POSTS")
   return NextResponse.json(post)
 }

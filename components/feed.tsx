@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ThumbsUp, ThumbsDown } from "lucide-react"
+import { ThumbsDown, ThumbsUp } from "lucide-react"
 
 type PollOption = {
   id: number
@@ -38,84 +38,113 @@ export function Feed() {
   const [posts, setPosts] = useState<Post[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [saving, setSaving] = useState<Record<number, boolean>>({})
+
   const CACHE_KEY = "feed.posts.v1"
 
-  const saveCache = (p: Post[]) => {
+  function saveCache(data: Post[]) {
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(p))
-    } catch (e) {
-      // ignore
-    }
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+    } catch {}
   }
 
   useEffect(() => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY)
-      if (cached) setPosts(JSON.parse(cached))
-    } catch (e) {
-      // ignore
+    async function loadPosts() {
+      try {
+        const res = await fetch("/api/posts?limit=10", {
+          cache: "no-store",
+        })
+
+        if (!res.ok) return
+
+        const data: PostsResponse = await res.json()
+
+        setPosts(data.posts)
+        setCurrentUserId(data.currentUserId)
+
+        saveCache(data.posts)
+      } catch (err) {
+        console.error(err)
+      }
     }
 
-    fetch("/api/posts?limit=10", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((response: PostsResponse) => {
-        console.log("/api/posts response", response)
-        setPosts(response.posts)
-        setCurrentUserId(response.currentUserId)
-        saveCache(response.posts)
-      })
+    try {
+      const cached = localStorage.getItem(CACHE_KEY)
+
+      if (cached) {
+        setPosts(JSON.parse(cached))
+      }
+    } catch {}
+
+    loadPosts()
+
+    window.addEventListener("post-created", loadPosts)
+
+    return () => {
+      window.removeEventListener("post-created", loadPosts)
+    }
   }, [])
 
-  async function handleReaction(postId: number, type: "like" | "dislike") {
-    const previousPosts = posts
-    const optimistic = posts.map((post) => {
-      if (post.id !== postId) return post
+  async function handleReaction(
+  postId: number,
+  type: "like" | "dislike"
+) {
+  const previousPosts = posts
 
-      const currentReaction = post.userReaction
-      let likes = post.likes
-      let dislikes = post.dislikes
-      let userReaction: Post["userReaction"] = type
+  const optimistic = posts.map((post) => {
+    if (post.id !== postId) return post
 
-      if (currentReaction === type) {
-        if (type === "like") likes = Math.max(0, likes - 1)
-        else dislikes = Math.max(0, dislikes - 1)
-        userReaction = null
-      } else {
-        if (currentReaction === "like") likes = Math.max(0, likes - 1)
-        if (currentReaction === "dislike") dislikes = Math.max(0, dislikes - 1)
-        if (type === "like") likes += 1
-        else dislikes += 1
-      }
+    let likes = post.likes
+    let dislikes = post.dislikes
+    let userReaction: "like" | "dislike" | null = type
 
-      return {
-        ...post,
-        likes,
-        dislikes,
-        userReaction,
-      }
+    if (post.userReaction === type) {
+      if (type === "like") likes--
+      else dislikes--
+
+      userReaction = null
+    } else {
+      if (post.userReaction === "like") likes--
+      if (post.userReaction === "dislike") dislikes--
+
+      if (type === "like") likes++
+      else dislikes++
+    }
+
+    return {
+      ...post,
+      likes: Math.max(0, likes),
+      dislikes: Math.max(0, dislikes),
+      userReaction,
+    }
+  })
+
+  setPosts(optimistic)
+  saveCache(optimistic)
+
+  setSaving((prev) => ({
+    ...prev,
+    [postId]: true,
+  }))
+
+  try {
+    const res = await fetch(`/api/posts/${postId}/reaction`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        reaction: type,
+      }),
     })
 
-    setPosts(optimistic)
-    saveCache(optimistic)
+    if (!res.ok) {
+      throw new Error("Failed")
+    }
 
-    setSaving((prev) => ({ ...prev, [postId]: true }))
-    try {
-      const res = await fetch(`/api/posts/${postId}/reaction`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ reaction: type }),
-      })
+    const updated = await res.json()
 
-      if (!res.ok) {
-        setPosts(previousPosts)
-        alert("Could not save your reaction")
-        return
-      }
-
-      const updated = await res.json()
-      const settled = posts.map((post) =>
+    setPosts((current) => {
+      const settled = current.map((post) =>
         post.id === postId
           ? {
               ...post,
@@ -123,18 +152,26 @@ export function Feed() {
               dislikes: updated.dislikes,
               userReaction: updated.userReaction,
             }
-          : post,
+          : post
       )
-      setPosts(settled)
+
       saveCache(settled)
-    } catch {
-      setPosts(previousPosts)
-      saveCache(previousPosts)
-      alert("Could not save your reaction")
-    } finally {
-      setSaving((prev) => ({ ...prev, [postId]: false }))
-    }
+      return settled
+    })
+  } catch (err) {
+    console.error(err)
+
+    setPosts(previousPosts)
+    saveCache(previousPosts)
+
+    alert("Couldn't save your reaction")
+  } finally {
+    setSaving((prev) => ({
+      ...prev,
+      [postId]: false,
+    }))
   }
+}
 
   async function handlePollVote(postId: number, pollId: number, optionId: number) {
     if (!currentUserId) {
@@ -192,28 +229,35 @@ export function Feed() {
       }
 
       const updated = await res.json()
-      const settled = posts.map((post) => {
-        if (post.id !== postId) return post
-        if (!post.poll) return post
+      setPosts((current) => {
+  const settled = current.map((post) => {
+    if (post.id !== postId) return post
+    if (!post.poll) return post
 
-        const voteMap = new Map<number, number>(
-          updated.voteCounts.map((item: { optionId: number; total: number }) => [item.optionId, item.total]),
-        )
+    const voteMap = new Map<number, number>(
+      updated.voteCounts.map((item: { optionId: number; total: number }) => [
+        item.optionId,
+        item.total,
+      ])
+    )
 
-        return {
-          ...post,
-          poll: {
-            ...post.poll,
-            selectedOptionId: updated.selectedOptionId,
-            options: post.poll.options.map((option) => ({
-              ...option,
-              votes: voteMap.get(option.id) ?? option.votes,
-            })),
-          },
-        }
-      })
-      setPosts(settled)
-      saveCache(settled)
+    return {
+      ...post,
+      poll: {
+        ...post.poll,
+        selectedOptionId: updated.selectedOptionId,
+        options: post.poll.options.map((option) => ({
+          ...option,
+          votes: voteMap.get(option.id) ?? option.votes,
+        })),
+      },
+    }
+  })
+
+  saveCache(settled)
+  return settled
+  alert("Could not save your poll vote")
+})
     } catch {
       setPosts(previousPosts)
       saveCache(previousPosts)

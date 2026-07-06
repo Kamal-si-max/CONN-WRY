@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
@@ -54,13 +55,20 @@ export default async function DashboardPage() {
       <header className="border-b bg-background">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link
-            href="/"
-            className="flex items-center gap-2 text-lg font-semibold tracking-tight"
+          href="/"
+          className="flex items-center gap-3"
           >
-            <span className="flex size-7 items-center justify-center rounded-md bg-accent text-accent-foreground">
-              C
+            <Image
+            src="/logo.png"
+            alt="Conn-Wry"
+            width={42}
+            height={42}
+            priority
+            />
+            
+            <span className="text-xl font-bold tracking-tight hidden sm:block">
+              CONN-WRY
             </span>
-            Conn-Wry
           </Link>
           <div className="flex items-center gap-3">
             <Link

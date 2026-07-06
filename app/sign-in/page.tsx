@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
@@ -12,13 +13,19 @@ export default async function SignInPage() {
   return (
     <main className="flex min-h-svh flex-col items-center justify-center bg-secondary px-4 py-12">
       <Link
-        href="/"
-        className="mb-8 flex items-center gap-2 text-lg font-semibold tracking-tight"
+      href="/"
+      className="mb-8 flex items-center gap-3"
       >
-        <span className="flex size-7 items-center justify-center rounded-md bg-accent text-accent-foreground">
-          C
-        </span>
-        Conn-Wry
+        <Image
+        src="/logo.png"
+        alt="Conn-Wry"
+        width={48}
+        height={48}
+        priority
+        />
+        <span className="text-2xl font-bold tracking-tight">
+          CONN-WRY
+          </span>
       </Link>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">

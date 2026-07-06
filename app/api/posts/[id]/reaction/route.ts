@@ -18,20 +18,9 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (Number.isNaN(postId)) {
     return NextResponse.json({ error: "Invalid post id" }, { status: 400 })
   }
-
-  const post = await db
-    .select()
-    .from(posts)
-    .where(eq(posts.id, postId))
-    .then((rows) => rows[0])
-
-  if (!post) {
-    return NextResponse.json({ error: "Post not found" }, { status: 404 })
-  }
-
   const body = await req.json()
   const reaction = body.reaction === "dislike" ? "dislike" : "like"
-
+  console.time("reaction")
   const existing = await db
     .select()
     .from(postLikes)
@@ -54,22 +43,41 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     })
   }
 
-  const [likesRow] = await db
+  const [likesRow, dislikesRow, userReactionRow] = await Promise.all([
+  db
     .select({ total: sql<number>`count(*)` })
     .from(postLikes)
-    .where(and(eq(postLikes.postId, postId), eq(postLikes.reaction, "like")))
+    .where(
+      and(
+        eq(postLikes.postId, postId),
+        eq(postLikes.reaction, "like")
+      )
+    )
+    .then((r) => r[0]),
 
-  const [dislikesRow] = await db
+  db
     .select({ total: sql<number>`count(*)` })
     .from(postLikes)
-    .where(and(eq(postLikes.postId, postId), eq(postLikes.reaction, "dislike")))
+    .where(
+      and(
+        eq(postLikes.postId, postId),
+        eq(postLikes.reaction, "dislike")
+      )
+    )
+    .then((r) => r[0]),
 
-  const userReactionRow = await db
+  db
     .select({ reaction: postLikes.reaction })
     .from(postLikes)
-    .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, session.user.id)))
-    .then((rows) => rows[0])
-
+    .where(
+      and(
+        eq(postLikes.postId, postId),
+        eq(postLikes.userId, session.user.id)
+      )
+    )
+    .then((r) => r[0]),
+])
+console.time("reaction")
   return NextResponse.json({
     likes: Number(likesRow?.total ?? 0),
     dislikes: Number(dislikesRow?.total ?? 0),

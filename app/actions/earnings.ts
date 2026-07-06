@@ -25,28 +25,52 @@ function generateReferralCode() {
 // Ensure a profile (with referral code) exists for the current user.
 export async function ensureProfile() {
   const userId = await getUserId()
-  const existing = await db
+
+  // Pehle check karo profile already hai ya nahi
+  const [existing] = await db
     .select()
     .from(profiles)
     .where(eq(profiles.userId, userId))
     .limit(1)
 
-  if (existing.length > 0) return existing[0]
-
-  let code = generateReferralCode()
-  // Retry a couple times on the (rare) unique collision.
-  for (let i = 0; i < 3; i++) {
-    try {
-      const [created] = await db
-        .insert(profiles)
-        .values({ userId, referralCode: code })
-        .returning()
-      return created
-    } catch {
-      code = generateReferralCode()
-    }
+  if (existing) {
+    return existing
   }
-  throw new Error("Could not create profile")
+
+  // Agar nahi hai to create karo
+  try {
+    const [created] = await db
+      .insert(profiles)
+      .values({
+        userId,
+        referralCode: generateReferralCode(),
+      })
+      .onConflictDoNothing({
+        target: profiles.userId,
+      })
+      .returning()
+
+    // Insert successful
+    if (created) {
+      return created
+    }
+
+    // Agar kisi aur request ne same time insert kar diya ho
+    const [profile] = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.userId, userId))
+      .limit(1)
+
+    if (profile) {
+      return profile
+    }
+
+    throw new Error("Could not create profile")
+  } catch (err) {
+    console.error("ensureProfile:", err)
+    throw err
+  }
 }
 
 export async function getDashboardData() {

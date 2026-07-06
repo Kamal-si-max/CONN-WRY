@@ -15,6 +15,13 @@
       "when": 1783051290289,
       "tag": "0001_pink_rocket_racer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783221640230,
+      "tag": "0002_next_roulette",
+      "breakpoints": true
     }
   ]
 }

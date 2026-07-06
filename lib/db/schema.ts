@@ -66,7 +66,7 @@ export const profiles = pgTable("profiles", {
   referralCode: text("referralCode").notNull().unique(),
   username: text("username").unique(),
   background: text("background"),
-  bio: text("bio").unique(),
+  bio: text("bio"),
   profilePicture: text("profilePicture"),
   referredBy: text("referredBy"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),

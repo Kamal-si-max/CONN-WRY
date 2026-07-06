@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
+import PageTransition from "@/components/page-transition"
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({
@@ -11,26 +12,13 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Conn-Wry — Get paid for simple marketing tasks',
-  description:
-    'Conn-Wry is the marketing platform where you earn real money completing quick tasks, sharing, and referring friends. Sign up free and cash out from $10.',
-  generator: 'v0.app',
+  title: "Conn-Wry — Get paid for simple marketing tasks",
+  description: "Conn-Wry is the marketing platform where you earn real money completing quick tasks, sharing, and referring friends. Sign up free and cash out from $10.",
+
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
   },
 }
 
@@ -45,9 +33,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} bg-background`}
     >
       <body className="font-sans antialiased">
-        {children}
+        <PageTransition>
+          {children}
+        </PageTransition>
+        
         <Toaster richColors position="top-center" />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   )

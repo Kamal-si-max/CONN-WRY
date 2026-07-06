@@ -3,12 +3,19 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
 
-export function PostForm() {
+type PostFormProps = {
+  onPostCreated?: (post: any) => void
+}
+
+export function PostForm({ onPostCreated }: PostFormProps) {
   const [content, setContent] = useState("")
   const [hasPoll, setHasPoll] = useState(false)
   const [pollQuestion, setPollQuestion] = useState("")
   const [pollOptions, setPollOptions] = useState(["", ""])
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
   function updateOption(index: number, value: string) {
     setPollOptions((current) => current.map((option, i) => (i === index ? value : option)))
@@ -22,26 +29,35 @@ export function PostForm() {
     setPollOptions((current) => current.filter((_, i) => i !== index))
   }
 
-  async function handleSubmit() {
-    const trimmedContent = content.trim()
-    const options = pollOptions.map((option) => option.trim()).filter(Boolean)
+async function handleSubmit() {
+  setLoading(true)
 
-    if (!trimmedContent && !(hasPoll && pollQuestion.trim() && options.length >= 2)) {
-      alert("Please add post content or a poll with at least two options.")
-      return
+  const trimmedContent = content.trim()
+  const options = pollOptions
+    .map((option) => option.trim())
+    .filter(Boolean)
+
+  if (
+    !trimmedContent &&
+    !(hasPoll && pollQuestion.trim() && options.length >= 2)
+  ) {
+    alert("Please add post content or a poll with at least two options.")
+    setLoading(false)
+    return
+  }
+
+  const payload: Record<string, unknown> = {
+    content: trimmedContent,
+  }
+
+  if (hasPoll) {
+    payload.poll = {
+      question: pollQuestion.trim(),
+      options,
     }
+  }
 
-    const payload: Record<string, unknown> = {
-      content: trimmedContent,
-    }
-
-    if (hasPoll) {
-      payload.poll = {
-        question: pollQuestion.trim(),
-        options,
-      }
-    }
-
+  try {
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: {
@@ -50,22 +66,29 @@ export function PostForm() {
       body: JSON.stringify(payload),
     })
 
-    if (res.ok) {
-      setContent("")
-      setHasPoll(false)
-      setPollQuestion("")
-      setPollOptions(["", ""])
-      window.location.reload()
-    } else {
+    if (!res.ok) {
       alert("Failed to create post")
+      return
     }
+
+    const createdPost = await res.json()
+
+    setContent("")
+    setHasPoll(false)
+    setPollQuestion("")
+    setPollOptions(["", ""])
+
+    onPostCreated?.(createdPost)
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <Card>
       <CardContent className="space-y-4 p-4">
         <textarea
-          className="w-full min-h-[120px] rounded-md border border-slate-300 p-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+          className="w-fullmin-h-[120px]rounded-mdborderborder-slate-300p-3outline-nonetransition-allduration-300focus:border-accentfocus:ring-2focus:ring-accent/20"
           placeholder="What's on your mind?"
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -77,7 +100,8 @@ export function PostForm() {
               type="checkbox"
               checked={hasPoll}
               onChange={(e) => setHasPoll(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent"
+              
+              className="h-4 w-4 rounded transition-all duration-300 border-slate-300 text-accent focus:ring-accent"
             />
             Add a poll to this post
           </label>
@@ -89,7 +113,8 @@ export function PostForm() {
                 value={pollQuestion}
                 onChange={(e) => setPollQuestion(e.target.value)}
                 placeholder="Poll question"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                
+                className="w-full rounded-md border transition-all duration-300 border-slate-300 bg-white px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
               />
 
               <div className="space-y-2">
@@ -100,7 +125,7 @@ export function PostForm() {
                       value={option}
                       onChange={(e) => updateOption(index, e.target.value)}
                       placeholder={`Option ${index + 1}`}
-                      className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                      className="flex-1 rounded-md border transition-all duration-300 border-slate-300 bg-white px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
                     />
                     {pollOptions.length > 2 && (
                       <Button
@@ -117,14 +142,16 @@ export function PostForm() {
                 ))}
               </div>
 
-              <Button type="button" variant="secondary" size="sm" onClick={addPollOption}>
+              <Button type="button" variant="secondary" size="sm" onClick={addPollOption} className="transition-all duration-300">
                 Add option
               </Button>
             </div>
           )}
         </div>
 
-        <Button onClick={handleSubmit}>Post</Button>
+        <Button onClick={handleSubmit} disabled={loading}>
+          {loading ? "Posting..." : "Post"}
+        </Button>
       </CardContent>
     </Card>
   )
