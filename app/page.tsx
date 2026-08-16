@@ -3,7 +3,8 @@ import Image from "next/image"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
   Megaphone,
   UserPlus,
@@ -78,8 +79,8 @@ export default async function HomePage() {
             Conn-Wry
           </Link>
           <nav className="flex items-center gap-2">
-            <Button variant="ghost" render={<Link href="/sign-in">Sign in</Link>} />
-            <Button render={<Link href="/sign-up">Get started</Link>} />
+            <Link href="/sign-in" className={cn(buttonVariants({ variant: "ghost" }))}>Sign in</Link>
+            <Link href="/sign-up" className={cn(buttonVariants({ variant: "default" }))}>Get started</Link>
           </nav>
         </div>
       </header>
@@ -101,15 +102,8 @@ export default async function HomePage() {
               from just $10.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                size="lg"
-                render={<Link href="/sign-up">Start earning free</Link>}
-              />
-              <Button
-                size="lg"
-                variant="outline"
-                render={<Link href="/sign-in">I already have an account</Link>}
-              />
+              <Link href="/sign-up" className={cn(buttonVariants({ size: "lg" }))}>Start earning free</Link>
+              <Link href="/sign-in" className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>I already have an account</Link>
             </div>
             <div className="flex items-center gap-6 pt-2 text-sm text-muted-foreground">
               <div>
@@ -230,11 +224,7 @@ export default async function HomePage() {
               Join over 120,000 members already earning with Conn-Wry. It&apos;s
               free to start.
             </p>
-            <Button
-              size="lg"
-              variant="secondary"
-              render={<Link href="/sign-up">Create your free account</Link>}
-            />
+            <Link href="/sign-up" className={cn(buttonVariants({ size: "lg", variant: "secondary" }))}>Create your free account</Link>
           </div>
         </section>
       </main>
