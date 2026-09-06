@@ -1,4 +1,5 @@
-import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, ArrowLeft } from "lucide-react";
 import DashboardShell from "@/components/dashboard-shell";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -54,6 +55,17 @@ const reasons = [
 export default function AboutPage() {
   return (
     <DashboardShell>
+      {/* Back to Dashboard */}
+      <div className="mb-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to Dashboard
+        </Link>
+      </div>
+
       {/* Hero */}
       <section className="mb-14 rounded-[2rem] border border-white/10 bg-white/80 px-8 py-14 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:px-12">
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">

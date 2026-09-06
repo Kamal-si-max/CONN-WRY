@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import { CldUploadWidget } from "next-cloudinary"
 
 export default function EditProfilePage() {
@@ -87,13 +88,14 @@ export default function EditProfilePage() {
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Edit profile</p>
-              <h1 className="mt-2 text-3xl font-semibold text-slate-950">Update your profile details</h1>
+              <h1 className="mt-2 text-2xl font-semibold text-slate-950 whitespace-nowrap">Update your profile details</h1>
             </div>
             <Link
               href="/profile"
-              className="rounded-full border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 shrink-0"
             >
-              Back
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              Back to Profile
             </Link>
           </div>
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, Tag, Clock, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { Calendar, Tag, Clock, ChevronRight, ArrowLeft } from "lucide-react";
 import DashboardShell from "@/components/dashboard-shell";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -96,6 +97,17 @@ export default function EventsPage() {
 
   return (
     <DashboardShell>
+      {/* Back to Dashboard */}
+      <div className="mb-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to Dashboard
+        </Link>
+      </div>
+
       {/* Page heading */}
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">

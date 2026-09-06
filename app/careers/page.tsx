@@ -1,9 +1,21 @@
-import { Briefcase, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Briefcase, ArrowRight, ArrowLeft } from "lucide-react";
 import DashboardShell from "@/components/dashboard-shell";
 
 export default function CareersPage() {
   return (
     <DashboardShell>
+      {/* Back to Dashboard */}
+      <div className="mb-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to Dashboard
+        </Link>
+      </div>
+
       {/* Page heading */}
       <div className="mb-12">
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">

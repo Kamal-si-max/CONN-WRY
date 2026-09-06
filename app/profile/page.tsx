@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { CardTitle } from "@/components/ui/card"
-import { Edit3 } from "lucide-react"
+import { Edit3, ArrowLeft } from "lucide-react"
 import { getDashboardData } from "@/app/actions/earnings"
 import { WithdrawDialog } from "@/components/withdraw-dialog"
 import DashboardShell from "@/components/dashboard-shell"
@@ -47,6 +47,17 @@ export default async function ProfilePage() {
 
   return (
     <DashboardShell>
+      {/* ── Back to Dashboard ── */}
+      <div className="mb-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to Dashboard
+        </Link>
+      </div>
+
       {/* ── Profile card ── */}
       <div className="mb-8 rounded-[2rem] border border-white/10 bg-white/95 p-8 shadow-sm shadow-slate-900/5">
         {/* Header row: avatar + name + edit button */}
