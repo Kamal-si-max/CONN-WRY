@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server"
-import { headers } from "next/headers"
 import { and, eq, sql } from "drizzle-orm"
 
-import { auth } from "@/lib/auth"
+import { getActiveUser } from "@/lib/active-session"
 import { db } from "@/lib/db"
 import { posts, postLikes } from "@/lib/db/schema"
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
-  const session = await auth.api.getSession({ headers: await headers() })
+  const activeUser = await getActiveUser()
 
-  if (!session?.user) {
+  if (!activeUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -24,7 +23,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   const existing = await db
     .select()
     .from(postLikes)
-    .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, session.user.id)))
+    .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, activeUser.id)))
     .then((rows) => rows[0])
 
   if (existing) {
@@ -38,7 +37,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   } else {
     await db.insert(postLikes).values({
       postId,
-      userId: session.user.id,
+      userId: activeUser.id,
       reaction,
     })
   }
@@ -72,7 +71,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     .where(
       and(
         eq(postLikes.postId, postId),
-        eq(postLikes.userId, session.user.id)
+        eq(postLikes.userId, activeUser.id)
       )
     )
     .then((r) => r[0]),

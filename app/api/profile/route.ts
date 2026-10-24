@@ -1,27 +1,26 @@
 import { NextResponse } from "next/server"
-import { headers } from "next/headers"
 import { and, eq } from "drizzle-orm"
-import { auth } from "@/lib/auth"
+import { getActiveUser } from "@/lib/active-session"
 import { db } from "@/lib/db"
 import { profiles } from "@/lib/db/schema"
 
 export async function GET() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const activeUser = await getActiveUser()
 
-  if (!session?.user) {
+  if (!activeUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.userId, session.user.id),
+    where: eq(profiles.userId, activeUser.id),
   })
 
   return NextResponse.json(profile)
 }
 
 export async function POST(req: Request) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) {
+  const activeUser = await getActiveUser()
+  if (!activeUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -45,7 +44,7 @@ export async function POST(req: Request) {
     await db
       .update(profiles)
       .set(values)
-      .where(eq(profiles.userId, session.user.id))
+      .where(eq(profiles.userId, activeUser.id))
 
     return NextResponse.json({ ok: true })
   } catch (error) {

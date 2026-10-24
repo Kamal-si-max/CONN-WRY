@@ -5,14 +5,27 @@ import { PostForm } from "@/components/post-form"
 import { Feed } from "@/components/feed"
 import { CardTitle } from "@/components/ui/card"
 import DashboardShell from "@/components/dashboard-shell"
+import { isAdminEmail } from "@/lib/admin"
+import { getActiveUser } from "@/lib/active-session"
+import Link from "next/link"
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect("/sign-in")
+  if (!(await getActiveUser())) redirect("/account-suspended")
 
   return (
     <DashboardShell>
       <div className="mx-auto max-w-2xl space-y-8">
+        {isAdminEmail(session.user.email) && (
+          <Link
+            href="/admin"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-white px-4 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            Open admin panel
+          </Link>
+        )}
+
         {/* Create post */}
         <div className="rounded-[1.75rem] border border-white/10 bg-white/95 shadow-sm shadow-slate-900/5">
           <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-4">

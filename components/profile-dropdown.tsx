@@ -52,37 +52,57 @@ export default function ProfileDropdown({ className }: ProfileDropdownProps) {
   const email = session?.data?.user?.email ?? "";
 
   return (
-    <div ref={containerRef} className={`relative inline-block text-left ${className ?? ""}`}>
-      {/* ── Trigger Button ── */}
-      <button
-        type="button"
-        onClick={toggle}
-        aria-haspopup="true"
-        aria-expanded={open}
+    <div
+      ref={containerRef}
+      className={`relative inline-block text-left ${className ?? ""}`}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={close}
+      onFocusCapture={() => setOpen(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close();
+      }}
+    >
+      <div
         className={[
-          "flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium select-none outline-none",
-          "transition-all duration-200 shadow-sm",
+          "flex items-center rounded-full border shadow-sm transition-all duration-200",
           open
-            ? "border-slate-900 bg-slate-900 text-white ring-2 ring-slate-900/10 shadow"
+            ? "border-slate-900 bg-slate-900 text-white ring-2 ring-slate-900/10"
             : "border-slate-200 bg-white/90 text-slate-700 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900",
         ].join(" ")}
       >
-        <div className="flex size-6 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
-          {firstName.charAt(0).toUpperCase()}
-        </div>
-        <span>Profile</span>
-        <ChevronDown
-          className={`size-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          aria-hidden="true"
-        />
-      </button>
+        <Link
+          href="/profile"
+          aria-label="Open profile"
+          className="flex items-center gap-2 rounded-l-full py-1.5 pl-3.5 pr-1 text-sm font-medium outline-none"
+        >
+          <span className="flex size-6 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+            {firstName.charAt(0).toUpperCase()}
+          </span>
+          <span>Profile</span>
+        </Link>
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={open ? "Close profile menu" : "Open profile menu"}
+          aria-haspopup="true"
+          aria-expanded={open}
+          aria-controls="profile-menu"
+          className="flex h-9 items-center rounded-r-full px-2 outline-none"
+        >
+          <ChevronDown
+            className={`size-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          />
+        </button>
+      </div>
 
       {/* ── Dropdown Panel with Dashboard & Setting ── */}
       {open && (
         <div
           role="menu"
           aria-label="Profile menu"
-          className="absolute right-0 top-full z-50 mt-2 w-64 origin-top-right animate-dropdownIn"
+          id="profile-menu"
+          className="absolute right-0 top-full z-50 w-64 origin-top-right pt-2 animate-dropdownIn"
         >
           <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-1.5 shadow-xl shadow-slate-900/10 backdrop-blur-xl">
             {/* User Profile Header */}

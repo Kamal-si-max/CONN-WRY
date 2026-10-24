@@ -13,10 +13,12 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Wallet, TrendingUp, CircleCheck, ArrowDownToLine, ArrowLeft } from "lucide-react"
 import DashboardShell from "@/components/dashboard-shell"
+import { getActiveUser } from "@/lib/active-session"
 
 export default async function DashboardOverviewPage() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect("/sign-in")
+  if (!(await getActiveUser())) redirect("/account-suspended")
 
   const data = await getDashboardData()
   const firstName = session.user.name?.split(" ")[0] ?? "there"
