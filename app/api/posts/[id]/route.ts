@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server"
-import { headers } from "next/headers"
 import { eq } from "drizzle-orm"
 
-import { auth } from "@/lib/auth"
+import { getActiveUser } from "@/lib/active-session"
 import { db } from "@/lib/db"
 import { posts, polls, pollOptions, pollVotes, postLikes } from "@/lib/db/schema"
 
 export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
-  const session = await auth.api.getSession({ headers: await headers() })
+  const activeUser = await getActiveUser()
 
-  if (!session?.user) {
+  if (!activeUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -29,7 +28,7 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
     return NextResponse.json({ error: "Post not found" }, { status: 404 })
   }
 
-  if (post.userId !== session.user.id) {
+  if (post.userId !== activeUser.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 

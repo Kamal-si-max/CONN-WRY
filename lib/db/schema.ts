@@ -15,6 +15,8 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("emailVerified").notNull().default(false),
   image: text("image"),
+  suspended: boolean("suspended").notNull().default(false),
+  suspensionReason: text("suspensionReason"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })
@@ -65,6 +67,7 @@ export const profiles = pgTable("profiles", {
   userId: text("userId").notNull().unique(),
   referralCode: text("referralCode").notNull().unique(),
   username: text("username").unique(),
+  phoneNumber: text("phoneNumber"),
   background: text("background"),
   bio: text("bio"),
   profilePicture: text("profilePicture"),
@@ -99,6 +102,9 @@ export const withdrawals = pgTable("withdrawals", {
   method: text("method").notNull(),
   destination: text("destination").notNull(),
   status: text("status").notNull().default("pending"),
+  reviewedBy: text("reviewedBy"),
+  reviewedAt: timestamp("reviewedAt"),
+  reviewNote: text("reviewNote"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 })
 // ---------------- POSTS ----------------

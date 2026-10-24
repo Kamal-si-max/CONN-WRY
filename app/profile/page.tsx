@@ -13,10 +13,12 @@ import { Edit3, ArrowLeft } from "lucide-react"
 import { getDashboardData } from "@/app/actions/earnings"
 import { WithdrawDialog } from "@/components/withdraw-dialog"
 import DashboardShell from "@/components/dashboard-shell"
+import { getActiveUser } from "@/lib/active-session"
 
 export default async function ProfilePage() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect("/sign-in")
+  if (!(await getActiveUser())) redirect("/account-suspended")
 
   const [profile] = await db
     .select({
