@@ -45,6 +45,13 @@ history, and authentication account. Withdrawal approval is manual: send the
 payout with your payment provider, then mark it paid in the portal. Admin
 balance adjustments are not provided.
 
+For Vercel preview/branch deployments, Better Auth trusts the exact origins
+provided by Vercel's `VERCEL_URL` and `VERCEL_BRANCH_URL` variables. If a custom
+deployment alias still returns `Invalid origin`, add its exact origin to the
+server-side `BETTER_AUTH_TRUSTED_ORIGINS` variable (comma-separated for multiple
+origins), for example `https://your-project-git-branch.vercel.app`, then
+redeploy. Do not use a wildcard origin.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 ## Learn More
