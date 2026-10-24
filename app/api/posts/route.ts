@@ -1,15 +1,14 @@
-﻿import { NextResponse } from "next/server"
-import { headers } from "next/headers"
+import { NextResponse } from "next/server"
 import { and, desc, eq, sql } from "drizzle-orm"
 
-import { auth } from "@/lib/auth"
+import { getActiveUser } from "@/lib/active-session"
 import { db } from "@/lib/db"
 import { posts, polls, pollOptions, pollVotes, postLikes, user } from "@/lib/db/schema"
 
 // GET all posts
 export async function GET(req: Request) {
   
-  const session = await auth.api.getSession({ headers: await headers() })
+  const activeUser = await getActiveUser()
   const url = new URL(req.url)
   const limit = Number(url.searchParams.get("limit") ?? "20")
   
@@ -86,11 +85,11 @@ export async function GET(req: Request) {
     return acc
   }, new Map<number, { likes: number; dislikes: number }>())
   
-  const userReactionRows = session?.user?.id
+  const userReactionRows = activeUser?.id
     ? await db
         .select({ postId: postLikes.postId, reaction: postLikes.reaction })
         .from(postLikes)
-        .where(eq(postLikes.userId, session.user.id))
+        .where(eq(postLikes.userId, activeUser.id))
     : []
   
 
@@ -100,11 +99,11 @@ export async function GET(req: Request) {
   }, new Map<number, "like" | "dislike">())
   
 
-  const userPollVoteRows = session?.user?.id
+  const userPollVoteRows = activeUser?.id
     ? await db
         .select({ pollId: pollVotes.pollId, optionId: pollVotes.optionId })
         .from(pollVotes)
-        .where(eq(pollVotes.userId, session.user.id))
+        .where(eq(pollVotes.userId, activeUser.id))
     : []
   
 
@@ -148,17 +147,15 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     posts: postsWithTotals,
-    currentUserId: session?.user?.id ?? null,
+    currentUserId: activeUser?.id ?? null,
   })
 }
 
 // CREATE post
 export async function POST(req: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
+  const activeUser = await getActiveUser()
 
-  if (!session?.user) {
+  if (!activeUser) {
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401 }
@@ -179,7 +176,7 @@ export async function POST(req: Request) {
   const [post] = await db
     .insert(posts)
     .values({
-      userId: session.user.id,
+      userId: activeUser.id,
       content,
     })
     .returning()

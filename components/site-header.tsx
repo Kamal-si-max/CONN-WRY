@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import ProfileDropdown from "@/components/profile-dropdown";
 import { LogoutButton } from "@/components/logout-button";
 
 /**
  * Shared authenticated header for all app pages.
- * Profile is a plain Link — no dropdown.
+ * Profile renders the interactive ProfileDropdown with Dashboard overview & Settings.
  * Logout uses the Better Auth signOut() client function via LogoutButton.
  */
 export default function SiteHeader() {
@@ -18,13 +19,10 @@ export default function SiteHeader() {
         </Link>
 
         {/* Right: Nav links */}
-        <nav className="flex items-center gap-1 sm:gap-2" aria-label="Main navigation">
-          <Link
-            href="/profile"
-            className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-          >
-            Profile
-          </Link>
+        <nav className="flex items-center gap-1.5 sm:gap-2.5" aria-label="Main navigation">
+          {/* Profile Dropdown */}
+          <ProfileDropdown />
+
           <Link
             href="/events"
             className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
@@ -44,7 +42,7 @@ export default function SiteHeader() {
             About Us
           </Link>
 
-          {/* Logout — calls authClient.signOut(), never navigates to /api/auth/signout */}
+          {/* Logout button */}
           <LogoutButton />
         </nav>
       </div>

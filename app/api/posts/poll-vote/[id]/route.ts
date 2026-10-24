@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server"
-import { headers } from "next/headers"
 import { and, eq, sql } from "drizzle-orm"
 
-import { auth } from "@/lib/auth"
+import { getActiveUser } from "@/lib/active-session"
 import { db } from "@/lib/db"
 import { pollOptions, pollVotes, polls, posts } from "@/lib/db/schema"
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
-  const session = await auth.api.getSession({ headers: await headers() })
+  const activeUser = await getActiveUser()
 
-  if (!session?.user) {
+  if (!activeUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -48,7 +47,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   const existingVote = await db
     .select()
     .from(pollVotes)
-    .where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.userId, session.user.id)))
+    .where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.userId, activeUser.id)))
     .then((rows) => rows[0])
 
   if (existingVote) {
@@ -63,7 +62,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     await db.insert(pollVotes).values({
       pollId,
       optionId,
-      userId: session.user.id,
+      userId: activeUser.id,
     })
   }
 
